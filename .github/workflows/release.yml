@@ -1,0 +1,96 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install cryptography
+      - run: python file_room.py --self-test
+
+  build:
+    name: Build ${{ matrix.artifact }}
+    needs: test
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ${{ matrix.os }}
+    permissions:
+      contents: write
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            artifact: FileRoom-windows-x64
+          - os: macos-latest
+            artifact: FileRoom-macos-arm64
+          - os: ubuntu-latest
+            artifact: FileRoom-linux-x64
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        if: runner.os != 'Linux'
+        with:
+          python-version: "3.13"
+
+      - name: Install Linux libraries
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3 python3-pip python3-venv python3-gi python3-gi-cairo gir1.2-gtk-3.0 libcairo2-dev pkg-config gcc
+          sudo apt-get install -y gir1.2-webkit2-4.1 || sudo apt-get install -y gir1.2-webkit2-4.0
+          python3 -m venv --system-site-packages .venv
+
+      - name: Match the tag to the app version
+        shell: bash
+        run: |
+          if [ -f .venv/bin/activate ]; then . .venv/bin/activate; fi
+          python - <<'PY'
+          import os
+          import pathlib
+          import re
+          import sys
+
+          text = pathlib.Path("file_room.py").read_text(encoding="utf-8")
+          version = re.search(r'__version__ = "([^"]+)"', text).group(1)
+          tag = os.environ["GITHUB_REF_NAME"].removeprefix("v")
+          if version != tag:
+              raise SystemExit(f"Tag {tag} does not match __version__ {version}")
+          PY
+
+      - name: Install packaging tools
+        shell: bash
+        run: |
+          if [ -f .venv/bin/activate ]; then . .venv/bin/activate; fi
+          python -m pip install --upgrade pip
+          python -m pip install pywebview cryptography pyinstaller
+          python -c "import webview, cryptography"
+
+      - name: Package
+        shell: bash
+        run: |
+          if [ -f .venv/bin/activate ]; then . .venv/bin/activate; fi
+          SEP=":"
+          if [ "$RUNNER_OS" = "Windows" ]; then SEP=";"; fi
+          python -m PyInstaller --noconfirm --onefile --windowed --name "${{ matrix.artifact }}" --distpath dist --workpath build --add-data "public${SEP}public" file_room.py
+
+      - name: Publish to the GitHub release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: ${{ runner.os == 'Windows' && format('dist/{0}.exe', matrix.artifact) || format('dist/{0}', matrix.artifact) }}
+          generate_release_notes: true
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

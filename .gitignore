@@ -1,0 +1,10 @@
+library/
+node_modules/
+config.json
+/target/
+/build/
+/dist/
+/FileRoom.exe
+*.spec
+__pycache__/
+*.pyc

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>File Room — Lethal Company saves</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect fill='%23141210' width='32' height='32'/%3E%3Crect x='6' y='8' width='20' height='16' fill='%23e7dcc8'/%3E%3Crect x='6' y='8' width='10' height='4' fill='%23e2a23a'/%3E%3C/svg%3E" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Azeret+Mono:wght@400;500&family=Big+Shoulders+Display:wght@500;700;800&family=Literata:opsz,wght@7..72,400;7..72,600&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <div class="hazard" aria-hidden="true"></div>
+    <header class="mast">
+      <div>
+        <p class="eyebrow">The Company · personnel records</p>
+        <h1>File Room</h1>
+      </div>
+      <p class="lede">
+        Lethal Company keeps three files. Archived runs sit in one database until you copy one back into a slot.
+      </p>
+    </header>
+
+    <div id="banner" class="banner" hidden></div>
+    <div id="update" class="banner notice" hidden></div>
+
+    <section class="status" id="status" aria-live="polite"></section>
+
+    <main class="layout">
+      <section class="bay" aria-labelledby="ship-heading">
+        <div class="section-head">
+          <h2 id="ship-heading">On the ship</h2>
+          <button type="button" class="text-btn" id="refresh">Rescan</button>
+        </div>
+        <div id="slots" class="slots"></div>
+      </section>
+
+      <section class="archive" aria-labelledby="archive-heading">
+        <div class="section-head">
+          <h2 id="archive-heading">Archive</h2>
+          <label class="filter">
+            <span class="sr">Search records</span>
+            <input id="filter" type="search" placeholder="Search alias or notes" autocomplete="off" />
+          </label>
+        </div>
+        <div id="records" class="records"></div>
+      </section>
+    </main>
+
+    <script src="/app.js"></script>
+  </body>
+</html>
